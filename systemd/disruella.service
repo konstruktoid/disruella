@@ -1,0 +1,10 @@
+[Unit]
+Description=disruella the service manipulator
+Wants=disruella.timer
+
+[Service]
+ExecStart=/usr/bin/python3 /usr/local/bin/disruella.py --services all
+CapabilityBoundingSet=~CAP_SYS_PTRACE
+
+[Install]
+WantedBy=multi-user.target

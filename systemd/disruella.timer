@@ -1,0 +1,12 @@
+[Unit]
+Description=disruella timer
+
+[Timer]
+AccuracySec=10min
+OnBootSec=5min
+OnCalendar=Mon-Fri *-*-* 08..17:00:00
+RandomizedDelaySec=30min
+Unit=disruella.service
+
+[Install]
+WantedBy=multi-user.target
