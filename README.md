@@ -10,7 +10,7 @@ testing of application redundency and failover logic.
 
 ## Usage
 
-```
+```sh
 usage: disruella.py [-h] -s SERVICES [SERVICES ...] [-r] [-t] [-v]
 
 disruella randomly disrupts system processess.
