@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """disruella randomly disrupts system processes."""
-
 from subprocess import PIPE, Popen  # noqa
 
 import argparse
@@ -124,7 +123,7 @@ def get_pid():
 
 
 def disruella():
-    """Merge all and execute ACTION"""
+    """Merge all and execute ACTION."""
     disruella_random = random.SystemRandom()
     handler = logging.handlers.SysLogHandler(address="/dev/log")
     disruella_log = logging.getLogger(FQDN)
