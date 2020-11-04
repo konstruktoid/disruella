@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
+"""disruella randomly disrupts system processes."""
 
-from subprocess import PIPE, Popen
+from subprocess import PIPE, Popen  # noqa
 
 import argparse
 import logging
@@ -13,15 +14,22 @@ import signal
 import socket
 import sys
 
-
+ACTION = None
+ARGS = None
+COMMAND = None
+FQDN = None
+PID = None
 PROC_DIR = "/proc"
+SERVICE = None
+STR_PID = None
 
 
 def arguments():
-    global args
+    """Command line arguments and help information."""
+    global ARGS
 
     parser = argparse.ArgumentParser(
-        description="disruella randomly disrupts system processess."
+        description="disruella randomly disrupts system processes."
     )
     parser.add_argument(
         "-s",
@@ -36,35 +44,37 @@ def arguments():
     )
     parser.add_argument("-v", "--verbose", help="Verbose output", action="store_true")
 
-    args = parser.parse_args()
+    ARGS = parser.parse_args()
 
 
 def network_settings():
-    global fqdn
+    """Returns FQDN."""
+    global FQDN
 
-    fqdn = socket.getfqdn()
+    FQDN = socket.getfqdn()
 
 
 def exec_check():
-    global action, command, service
+    """Returns systemctl command actions."""
+    global ACTION, COMMAND, SERVICE
 
     exec_check_random = random.SystemRandom()
     systemctl_command = shutil.which("systemctl")
 
     try:
-        services = args.services
+        args_services = ARGS.services
 
-        if "all" in services:
-            service = 0
+        if "all" in args_services:
+            SERVICE = 0
 
         else:
-            service = exec_check_random.choice(services)
+            SERVICE = exec_check_random.choice(args_services)
 
-            if args.verbose:
-                print(services)
+            if ARGS.verbose:
+                print(args_services)
 
             if os.path.isfile(systemctl_command):
-                actions = [
+                systemctl_actions = [
                     "kill",
                     "reload-or-restart",
                     "restart",
@@ -72,50 +82,52 @@ def exec_check():
                     "try-reload-or-restart",
                 ]
 
-                action = exec_check_random.choice(actions)
-                command = [systemctl_command, action, service]
+                ACTION = exec_check_random.choice(systemctl_actions)
+                COMMAND = [systemctl_command, ACTION, SERVICE]
 
             else:
-                if args.verbose:
+                if ARGS.verbose:
                     print("No suitable service manager found.")
                 sys.exit(1)
 
-            if args.verbose:
-                print(command)
+            if ARGS.verbose:
+                print(COMMAND)
 
-        if args.verbose:
-            if service == 0:
+        if ARGS.verbose:
+            if SERVICE == 0:
                 print("All services.")
             else:
-                print(service)
+                print(SERVICE)
 
-    except Exception:
-        print("exec_check ERROR: ", sys.exc_info()[0])
+    except UnboundLocalError:
+        print("Disruella UnboundLocalError: ", sys.exc_info()[0])
 
 
 def get_pid():
-    global pid, str_pid
+    """Returns PID and PID COMMAND line."""
+    global PID, STR_PID
 
     proc_random = random.SystemRandom()
-    pids = [pid for pid in os.listdir(PROC_DIR) if pid.isdigit()]
-    pid = int(proc_random.choice(pids))
+    system_pids = [PID for PID in os.listdir(PROC_DIR) if PID.isdigit()]
+    PID = int(proc_random.choice(system_pids))
 
-    while pid <= 500:
-        if args.verbose:
-            print(pid)
+    while PID <= 500:
+        if ARGS.verbose:
+            print(PID)
         get_pid()
 
-    str_pid = str(pid)
-    cmdline = open(os.path.join(PROC_DIR, str_pid, "cmdline"), "rb").read()
+    STR_PID = str(PID)
+    cmdline = open(os.path.join(PROC_DIR, STR_PID, "cmdline"), "rb").read()
 
     if not cmdline:
         get_pid()
 
 
 def disruella():
+    """Merge all and execute ACTION"""
     disruella_random = random.SystemRandom()
     handler = logging.handlers.SysLogHandler(address="/dev/log")
-    disruella_log = logging.getLogger(fqdn)
+    disruella_log = logging.getLogger(FQDN)
     disruella_log.addHandler(handler)
     disruella_log.setLevel(logging.DEBUG)
 
@@ -123,15 +135,15 @@ def disruella():
         rhinehart_influence = disruella_random.randint(1, 6)
         host_reboot = 0
 
-        if (rhinehart_influence == 6) and args.reboot:
-            disruella_message = "disruella: Rebooting '%s'." % (fqdn)
+        if (rhinehart_influence == 6) and ARGS.reboot:
+            disruella_message = "disruella: Rebooting '%s'." % (FQDN)
             host_reboot = 1
 
-        elif (rhinehart_influence >= 4) and (service == 0):
+        elif (rhinehart_influence >= 4) and (SERVICE == 0):
             try:
                 get_pid()
 
-                pstatus = open(os.path.join(PROC_DIR, str_pid, "status"), "rb").read()
+                pstatus = open(os.path.join(PROC_DIR, STR_PID, "status"), "rb").read()
                 pcompile = str(pstatus.decode(sys.stdout.encoding))
 
                 for line in re.findall("^Name.*", pcompile, re.MULTILINE):
@@ -139,26 +151,26 @@ def disruella():
 
                 disruella_message = (
                     "disruella: Performing SIGTERM on PID '%s' (%s) on %s."
-                    % (pid, process_name, fqdn)
+                    % (PID, process_name, FQDN)
                 )
 
-                os.kill(pid, signal.SIGTERM)
+                os.kill(PID, signal.SIGTERM)
 
-            except Exception:
-                disruella_exc = "DISRUELLA ERROR: %s." % (sys.exc_info())
+            except UnboundLocalError:
+                disruella_exc = "Disruella UnboundLocalError: %s." % (sys.exc_info())
                 disruella_log.info(disruella_exc)
 
         elif rhinehart_influence >= 4:
             disruella_message = (
                 "disruella: Performing '%s' on service '%s' on '%s'."
                 % (
-                    action,
-                    service,
-                    fqdn,
+                    ACTION,
+                    SERVICE,
+                    FQDN,
                 )
             )
 
-            process = Popen(command, stdout=PIPE, stderr=PIPE, shell=False)
+            process = Popen(COMMAND, stdout=PIPE, stderr=PIPE, shell=False)  # noqa
             stdout, stderr = process.communicate()
 
             if stderr:
@@ -178,20 +190,20 @@ def disruella():
                 rhinehart_influence
             )
 
-        if args.test:
-            disruella_message = ("%s Test.") % (disruella_message)
+        if ARGS.test:
+            disruella_message = ("%s Test run.") % (disruella_message)
 
         disruella_log.info(disruella_message)
 
-        if args.verbose:
+        if ARGS.verbose:
             disruella_verbose = ("%s [%s]") % (disruella_message, rhinehart_influence)
             print(disruella_verbose)
 
-        if host_reboot == 1:
-            process = Popen("/sbin/reboot", shell=False)
+        if host_reboot == 1 and not ARGS.test:
+            process = Popen("/sbin/reboot", shell=False)  # noqa
 
-    except Exception:
-        disruella_exc = "DISRUELLA ERROR: %s." % (sys.exc_info())
+    except UnboundLocalError:
+        disruella_exc = "Disruella UnboundLocalError: %s." % (sys.exc_info())
         disruella_log.info(disruella_exc)
 
 
