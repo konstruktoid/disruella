@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """disruella randomly disrupts system processes."""
-from subprocess import PIPE, Popen  # noqa
+from subprocess import PIPE, Popen  # nosec B404
 
 import argparse
 import logging
@@ -169,7 +169,7 @@ def disruella():
                 )
             )
 
-            process = Popen(COMMAND, stdout=PIPE, stderr=PIPE, shell=False)  # noqa
+            process = Popen(COMMAND, stdout=PIPE, stderr=PIPE, shell=False)  # nosec
             stdout, stderr = process.communicate()
 
             if stderr:
@@ -199,7 +199,7 @@ def disruella():
             print(disruella_verbose)
 
         if host_reboot == 1 and not ARGS.test:
-            process = Popen("/sbin/reboot", shell=False)  # noqa
+            process = Popen("/sbin/reboot", shell=False)  # nosec B404,B603
 
     except UnboundLocalError:
         disruella_exc = "Disruella UnboundLocalError: %s." % (sys.exc_info())
