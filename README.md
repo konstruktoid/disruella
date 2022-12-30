@@ -1,5 +1,7 @@
 # Disruella
 
+THIS IS CURRENTLY INACCURATE, REFACTOR IN PROGRESS
+
 `disruella` is the disrupting Cebuella, a very small digitalized primate
 responsible for randomly preventing something from continuing as usual
 or as expected.
