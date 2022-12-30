@@ -4,9 +4,7 @@
 import argparse
 import logging
 import logging.handlers
-import os
 import random
-import signal
 import socket
 import sys
 import psutil
