@@ -1,7 +1,5 @@
 # Disruella
 
-THIS IS CURRENTLY INACCURATE, REFACTOR IN PROGRESS
-
 `disruella` is the disrupting Cebuella, a very small digitalized primate
 responsible for randomly preventing something from continuing as usual
 or as expected.
@@ -13,49 +11,18 @@ testing of application redundency and failover logic.
 ## Usage
 
 ```sh
-usage: disruella.py [-h] -s SERVICES [SERVICES ...] [-r] [-t] [-v]
+usage: disruella.py [-h] [-r] [-s SERVICE [SERVICE ...]] [-t] [-v]
 
-disruella randomly disrupts system processes.
-
-optional arguments:
+options:
   -h, --help            show this help message and exit
-  -s SERVICES [SERVICES ...], --services SERVICES [SERVICES ...]
-                        Services disruella should focus on, if 'all' a random
-                        PID will be chosen
-  -r, --reboot          Allow rebooting
+  -r, --reboot          Allow the host to be rebooted
+  -s SERVICE [SERVICE ...], --service SERVICE [SERVICE ...]
+                        A service disruella should focus on, otherwise a random PID will be chosen
   -t, --test            Don't disrupt anything, just test
-  -v, --verbose         Verbose output
+  -v, --verbose         Print messages to console
 ```
 
 Use systemd timers or the command line to execute `disruella`.
-
-## Workflow
-
-1. Find `systemctl` and register available actions.
-1. Roll a six sided dice.
-    1. If the roll is six and the `reboot` argument is used, reboot the host.
-    1. If the roll is equal or higher than four and `--services all`, then get a
-      PID higher than 500 with a valid `cmdline`, and send a `SIGTERM` to that
-      process.
-    1. If the roll is equal or higher than four and one or more services are
-      specified, then perform a random `systemctl` action on one of the
-      services.
-    1. If the roll is lower than four, `disruella` won't do anything.
-
-### systemctl actions
-
-```python
-actions = [
-    "kill",
-    "reload-or-restart",
-    "restart",
-    "stop",
-    "try-reload-or-restart",
-]
-```
-
-See [https://www.freedesktop.org/software/systemd/man/systemctl.html](https://www.freedesktop.org/software/systemd/man/systemctl.html)
-for details on each action.
 
 ### Logging
 
@@ -65,44 +32,25 @@ The generated logs can be found using
 ## Example
 
 ```sh
-~$ sudo /vagrant/disruella/disruella.py -v -s test
-['test']
-['/usr/bin/systemctl', 'stop', 'test']
-test
-disruella: performing 'stop' on service 'test' on 'ubuntu-focal'. [6]
-~$ sudo /vagrant/disruella/disruella.py -v -s atd
-['atd']
-['/usr/bin/systemctl', 'try-reload-or-restart', 'atd']
-atd
-disruella: performing 'try-reload-or-restart' on service 'atd' on 'ubuntu-focal'. [4]
-~$ sudo /vagrant/disruella/disruella.py -v -s atd -t
-['atd']
-['/usr/bin/systemctl', 'try-reload-or-restart', 'atd']
-atd
-disruella: resting, rolled a 2. Test. [2]
-~$ sudo /vagrant/disruella/disruella.py -v -s atd -t
-['atd']
-['/usr/bin/systemctl', 'stop', 'atd']
-atd
-disruella: performing 'stop' on service 'atd' on 'ubuntu-focal'. Test. [6]
-~$ sudo /vagrant/disruella/disruella.py -s atd -t
-~$ sudo /vagrant/disruella/disruella.py -s atd
-~$ sudo journalctl SYSLOG_IDENTIFIER=disruella
-[...]
-Oct 12 21:32:29 ubuntu-focal disruella[28571]: Failed to stop test.service: Unit test.service not loaded.
-Oct 12 21:32:29 ubuntu-focal disruella[28571]: performing 'stop' on service 'test' on 'ubuntu-focal'.
-Oct 12 21:33:46 ubuntu-focal disruella[28642]: Failed to restart test.service: Unit test.service not found.
-Oct 12 21:33:46 ubuntu-focal disruella[28642]: performing 'restart' on service 'test' on 'ubuntu-focal'.
-Oct 12 21:34:30 ubuntu-focal disruella[28689]: Failed to stop test.service: Unit test.service not loaded.
-Oct 12 21:34:30 ubuntu-focal disruella[28689]: performing 'stop' on service 'test' on 'ubuntu-focal'.
-Oct 12 21:34:32 ubuntu-focal disruella[28695]: resting, rolled a 1.
-Oct 12 21:34:36 ubuntu-focal disruella[28699]: Failed to stop test.service: Unit test.service not loaded.
-Oct 12 21:34:36 ubuntu-focal disruella[28699]: performing 'stop' on service 'test' on 'ubuntu-focal'.
-Oct 12 21:34:43 ubuntu-focal disruella[28709]: performing 'try-reload-or-restart' on service 'atd' on 'ubuntu-focal'.
-Oct 12 21:34:50 ubuntu-focal disruella[28717]: resting, rolled a 2. Test.
-Oct 12 21:34:52 ubuntu-focal disruella[28723]: performing 'stop' on service 'atd' on 'ubuntu-focal'. Test.
-Oct 12 21:35:25 ubuntu-focal disruella[28752]: resting, rolled a 1. Test.
-Oct 12 21:35:26 ubuntu-focal disruella[28758]: performing 'restart' on service 'atd' on 'ubuntu-focal'.
+$ ./disruella/disruella.py -v -t -s 'cron'
+host_fqdn: ubuntu-jammy
+reboot: False
+test: True
+verbose: True
+disruella: Resting, rolled a 3
+$ ./disruella/disruella.py -v -t -s 'cron'
+host_fqdn: ubuntu-jammy
+reboot: False
+test: True
+verbose: True
+[psutil.Process(pid=685, name='cron', status='sleeping', started='18:49:42')]
+{'cmdline': ['/usr/sbin/cron', '-f', '-P'], 'name': 'cron', 'username': 'root', 'pid': 685, 'status': 'sleeping'}
+disruella: Terminating PID '685' (<bound method Process.name of psutil.Process(pid=685, name='cron', status='sleeping', started='18:49:42')>) on ubuntu-jammy - TEST
+$ journalctl -r SYSLOG_IDENTIFIER=disruella
+Dec 31 00:25:39 ubuntu-jammy disruella[3586]: Terminating PID '685' (<bound method Process.name of psutil.Process(pid=685, name='cron', status='sleeping', started='18:49:42')>) on ubuntu-jammy - TEST
+Dec 31 00:25:38 ubuntu-jammy disruella[3585]: Resting, rolled a 3
+Dec 31 00:25:04 ubuntu-jammy disruella[3567]: Terminating PID '685' (<bound method Process.name of psutil.Process(pid=685, name='cron', status='sleeping', started='18:49:42')>) on ubuntu-jammy - TEST
+Dec 31 00:25:01 ubuntu-jammy disruella[3566]: Resting, rolled a 2
 ```
 
 ## Contributing
