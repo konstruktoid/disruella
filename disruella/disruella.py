@@ -5,9 +5,10 @@ import argparse
 import logging
 import logging.handlers
 import random
-import os
 import socket
 import sys
+import shutil
+import subprocess  # nosec B404,S404
 import psutil
 
 
@@ -74,7 +75,12 @@ def disruella(reboot=False, test=False, verbose=False, service=False):
         disruella_log.info(disruella_message)
 
         if not test:
-            os.system('shutdown -r now "Initialised by disruella"')
+            shutdown_command = shutil.which("shutdown")
+            subprocess.run(
+                [shutdown_command, "-r", "now", "Initialised by disruella"],
+                shell=False,  # nosec B603,S603
+                check=True,
+            )
     elif rhinehart_influence >= 4:
         try:
             service = get_process(service, verbose)
