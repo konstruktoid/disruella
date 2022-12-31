@@ -15,11 +15,11 @@ usage: disruella.py [-h] [-r] [-s SERVICE [SERVICE ...]] [-t] [-v]
 
 options:
   -h, --help            show this help message and exit
-  -r, --reboot          Allow the host to be rebooted
+  -r, --reboot          allow the host to be rebooted
   -s SERVICE [SERVICE ...], --service SERVICE [SERVICE ...]
-                        A service disruella should focus on, otherwise a random PID will be chosen
-  -t, --test            Don't disrupt anything, just test
-  -v, --verbose         Print messages to console
+                        a service disruella should focus on, otherwise a random PID will be chosen
+  -t, --test            don't disrupt anything, just test
+  -v, --verbose         print messages to console
 ```
 
 Use systemd timers or the command line to execute `disruella`.
