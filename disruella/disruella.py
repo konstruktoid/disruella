@@ -60,7 +60,7 @@ def get_process(service, verbose):
     return random.SystemRandom().choice(processes)
 
 
-def disruella(reboot, test, verbose, service):  # noqa=c901,PLR0912
+def disruella(reboot, test, verbose, service):  # noqa: C901, PLR0912
     """Terminate a process or reboot the host, if specified."""
     host_fqdn = socket.getfqdn()
     handler = logging.handlers.SysLogHandler(address="/dev/log")
@@ -92,14 +92,14 @@ def disruella(reboot, test, verbose, service):  # noqa=c901,PLR0912
             shutdown_command = shutil.which("shutdown")
             subprocess.run(
                 [shutdown_command, "-r", "now", "Initialised by disruella"],
-                shell=False,  # noqa=S603
+                shell=False,  # noqa: S603
                 check=True,
             )
     elif rhinehart_influence >= dice_median:
         try:
             service = get_process(service, verbose)
 
-            disruella_message = f"disruella: Terminating PID '{service.pid}' ({service.name}) on {host_fqdn}"  # noqa=E501
+            disruella_message = f"disruella: Terminating PID '{service.pid}' ({service.name}) on {host_fqdn}"  # noqa: E501
             if test:
                 disruella_message = f"{disruella_message} - TEST"
 
