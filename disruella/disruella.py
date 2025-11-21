@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# ruff: noqa: C901, FBT001, T201, PLR0912
 """disruella randomly disrupts system processes."""
 
 import argparse
@@ -13,7 +14,7 @@ import sys
 import psutil
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -43,9 +44,8 @@ def parse_args():
     return parser.parse_args()
 
 
-def get_process(service, verbose):
-    """Returns a service or a random process."""
-
+def get_process(service: list[str] | None, verbose: bool) -> psutil.Process:
+    """Return a service or a random process."""
     low_pids = 500
 
     if service:
@@ -60,7 +60,12 @@ def get_process(service, verbose):
     return random.SystemRandom().choice(processes)
 
 
-def disruella(reboot, test, verbose, service):  # noqa: C901, PLR0912
+def disruella(
+    reboot: bool,
+    test: bool,
+    verbose: bool,
+    service: list[str] | None,
+) -> None:
     """Terminate a process or reboot the host, if specified."""
     host_fqdn = socket.getfqdn()
     handler = logging.handlers.SysLogHandler(address="/dev/log")
@@ -90,22 +95,25 @@ def disruella(reboot, test, verbose, service):  # noqa: C901, PLR0912
 
         if not test:
             shutdown_command = shutil.which("shutdown")
-            subprocess.run(
+            subprocess.run(  # noqa: S603
                 [shutdown_command, "-r", "now", "Initialised by disruella"],
-                shell=False,  # noqa: S603
+                shell=False,
                 check=True,
             )
     elif rhinehart_influence >= dice_median:
         try:
-            service = get_process(service, verbose)
+            process = get_process(service, verbose)
 
-            disruella_message = f"disruella: Terminating PID '{service.pid}' ({service.name}) on {host_fqdn}"  # noqa: E501
+            disruella_message = (
+                f"disruella: Terminating PID '{process.pid}' ({process.name}) "
+                f"on {host_fqdn}"
+            )
             if test:
                 disruella_message = f"{disruella_message} - TEST"
 
             if verbose:
                 print(
-                    service.as_dict(
+                    process.as_dict(
                         attrs=["cmdline", "name", "pid", "status", "username"],
                     ),
                 )
@@ -114,7 +122,7 @@ def disruella(reboot, test, verbose, service):  # noqa: C901, PLR0912
             disruella_log.info(disruella_message)
 
             if not test:
-                service.terminate()
+                process.terminate()
 
         except psutil.AccessDenied:
             disruella_exc = f"disruella: {sys.exc_info()}."
