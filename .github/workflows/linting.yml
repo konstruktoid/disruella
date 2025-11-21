@@ -10,13 +10,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1:wq
 
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get --assume-yes --no-install-recommends install python3-pip
-          python3 -m pip install --user -U -r requirements.txt
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          uv venv
+          source .venv/bin/activate
+          uv pip install -U -r requirements.txt
 
       - name: Python linting
         uses: konstruktoid/action-pylint@v2.1.0
