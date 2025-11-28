@@ -8,4 +8,4 @@ platformdirs==4.5.0
 psutil==7.1.3
 pytokens==0.3.0
 ruff==0.14.6
-ty==0.0.1a28
+ty==0.0.1a29
