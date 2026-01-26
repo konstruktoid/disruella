@@ -6,6 +6,6 @@ packaging==25.0
 pathspec==1.0.3
 platformdirs==4.5.1
 psutil==7.2.1
-pytokens==0.3.0
+pytokens==0.4.0
 ruff==0.14.14
 ty==0.0.12
