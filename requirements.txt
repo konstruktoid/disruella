@@ -4,7 +4,7 @@ click==8.3.1
 mypy-extensions==1.1.0
 packaging==26.0
 pathspec==1.0.4
-platformdirs==4.6.0
+platformdirs==4.7.0
 psutil==7.2.2
 pytokens==0.4.1
 ruff==0.15.0
